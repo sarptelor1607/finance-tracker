@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, session
 from models import db, Transaction
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from functools import wraps
+import calendar
 
 transactions_bp = Blueprint('transactions', __name__)
 
@@ -19,9 +20,13 @@ def next_due(last_date, interval):
     if interval == 'weekly':
         return last_date + timedelta(weeks=1)
     if interval == 'monthly':
-        if last_date.month == 12:
-            return last_date.replace(year=last_date.year + 1, month=1)
-        return last_date.replace(month=last_date.month + 1)
+        y, m = last_date.year, last_date.month
+        if m == 12:
+            y, m = y + 1, 1
+        else:
+            m += 1
+        d = min(last_date.day, calendar.monthrange(y, m)[1])
+        return last_date.replace(year=y, month=m, day=d)
     return last_date
 
 def apply_recurring(uid):
@@ -60,13 +65,26 @@ def dashboard():
     savings = sum(t.amount for t in all_txns if t.type == 'saving')
     balance = income - expense
     recent = Transaction.query.filter_by(user_id=uid).order_by(Transaction.date.desc()).limit(5).all()
+    error = 'Invalid date. Use DD.MM.YYYY or YYYY-MM-DD.' if request.args.get('error') == 'invalid_date' else None
     return render_template('dashboard.html',
         income=income, expense=expense, balance=balance, savings=savings,
-        recent=recent, username=session.get('username'))
+        recent=recent, username=session.get('username'), error=error)
+
+def parse_date(s):
+    for fmt in ('%d.%m.%Y', '%Y-%m-%d'):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            pass
+    raise ValueError(f'Invalid date: {s}')
 
 @transactions_bp.route('/transactions/add', methods=['POST'])
 @login_required
 def add():
+    try:
+        parsed_date = parse_date(request.form['date'])
+    except ValueError:
+        return redirect('/dashboard?error=invalid_date')
     try:
         recurring = 'recurring' in request.form
         t = Transaction(
@@ -74,7 +92,7 @@ def add():
             type=request.form['type'],
             amount=float(request.form['amount']),
             category=request.form['category'],
-            date=date.fromisoformat(request.form['date']),
+            date=parsed_date,
             note=request.form.get('note', ''),
             recurring=recurring,
             recurring_interval=request.form.get('recurring_interval') if recurring else None

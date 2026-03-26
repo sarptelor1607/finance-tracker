@@ -47,6 +47,7 @@
 
         <div class="add-form-box">
             <h2>Add Transaction</h2>
+            {% if error %}<p class="error" style="margin-bottom:12px;">{{ error }}</p>{% endif %}
             <form method="POST" action="/transactions/add">
                 <div class="form-row">
                     <div>
