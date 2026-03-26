@@ -13,9 +13,10 @@
         {% if error %}
         <p class="error">{{ error }}</p>
         {% endif %}
-        <form method="POST">
+        <p class="error" id="inline-error" style="display:none"></p>
+        <form method="POST" id="register-form">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" required autofocus>
+            <input type="text" id="username" name="username" required autofocus maxlength="30">
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required>
             <button type="submit">Register</button>

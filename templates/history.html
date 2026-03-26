@@ -63,7 +63,7 @@
                             {% if t.type == 'income' %}+{% else %}-{% endif %}${{ "%.2f"|format(t.amount) }}
                         </td>
                         <td>{{ t.note or '—' }}</td>
-                        <td>
+                        <td class="action-cell">
                             <button class="delete-btn" onclick="deleteTransaction({{ t.id }}, document.getElementById('row-{{ t.id }}'))">✕</button>
                         </td>
                     </tr>
