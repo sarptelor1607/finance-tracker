@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report – Finance Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <span class="nav-brand">Finance Tracker</span>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/transactions">History</a>
+            <a href="/report">Report</a>
+            <a href="/auth/logout" class="logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <p class="page-title">Financial Report</p>
+
+        <div class="report-section">
+            <h2 class="section-title">Recurring Transactions</h2>
+            {% if recurring_summary %}
+            <div class="table-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Per Occurrence</th>
+                            <th>Interval</th>
+                            <th>Weekly</th>
+                            <th>Monthly</th>
+                            <th>Yearly</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in recurring_summary %}
+                        <tr>
+                            <td>{{ r.note or '—' }}</td>
+                            <td><span class="badge badge-{{ r.type }}">{{ r.type }}</span></td>
+                            <td><span class="badge badge-category">{{ r.category }}</span></td>
+                            <td class="amount-{{ r.type }}">${{ "%.2f"|format(r.amount) }}</td>
+                            <td><span class="badge badge-interval">{{ r.interval }}</span></td>
+                            <td>${{ "%.2f"|format(r.weekly) }}</td>
+                            <td>${{ "%.2f"|format(r.monthly) }}</td>
+                            <td class="font-semibold">${{ "%.2f"|format(r.yearly) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">No recurring transactions set up yet.</div>
+            {% endif %}
+        </div>
+
+        <div class="report-section">
+            <h2 class="section-title">Daily Overview <span class="section-sub">last 7 days</span></h2>
+            <div class="table-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Income</th>
+                            <th>Expenses</th>
+                            <th>Savings</th>
+                            <th>Net Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in daily %}
+                        <tr>
+                            <td class="period-label">{{ row.label }}</td>
+                            <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                            <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                            <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                            <td>
+                                <span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">
+                                    {% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h2 class="section-title">Weekly Overview <span class="section-sub">last 4 weeks</span></h2>
+            <div class="table-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Week</th>
+                            <th>Income</th>
+                            <th>Expenses</th>
+                            <th>Savings</th>
+                            <th>Net Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in weekly %}
+                        <tr>
+                            <td class="period-label">{{ row.label }}</td>
+                            <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                            <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                            <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                            <td>
+                                <span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">
+                                    {% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h2 class="section-title">Monthly Overview <span class="section-sub">last 12 months</span></h2>
+            <div class="table-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Income</th>
+                            <th>Expenses</th>
+                            <th>Savings</th>
+                            <th>Net Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in monthly %}
+                        <tr>
+                            <td class="period-label">{{ row.label }}</td>
+                            <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                            <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                            <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                            <td>
+                                <span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">
+                                    {% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -424,6 +424,65 @@ tbody tr:hover {
     color: #fff;
 }
 
+/* ── Report ── */
+
+.report-section {
+    margin-bottom: 36px;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.section-sub {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #9ca3af;
+}
+
+.period-label {
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.font-semibold {
+    font-weight: 700;
+}
+
+.badge-interval {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.net-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.net-positive {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.net-negative {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.net-saving {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 900px) {

@@ -115,3 +115,74 @@ def delete(tid):
         db.session.delete(t)
         db.session.commit()
     return ('', 204)
+
+@transactions_bp.route('/report')
+@login_required
+def report():
+    uid = session['user_id']
+    today = date.today()
+    all_txns = Transaction.query.filter_by(user_id=uid).all()
+
+    rec_seen = {}
+    for t in all_txns:
+        if not t.recurring:
+            continue
+        key = (t.type, t.amount, t.category, t.note or '', t.recurring_interval)
+        if key not in rec_seen:
+            rec_seen[key] = key
+
+    recurring_summary = []
+    for typ, amount, category, note, interval in rec_seen.values():
+        if interval == 'daily':
+            weekly = amount * 7
+            monthly = amount * 30.44
+            yearly = amount * 365
+        elif interval == 'weekly':
+            weekly = amount
+            monthly = amount * 52 / 12
+            yearly = amount * 52
+        else:
+            weekly = amount * 12 / 52
+            monthly = amount
+            yearly = amount * 12
+        recurring_summary.append({
+            'type': typ, 'amount': amount, 'category': category,
+            'note': note, 'interval': interval,
+            'weekly': weekly, 'monthly': monthly, 'yearly': yearly,
+        })
+
+    def period_row(label, txns):
+        inc = sum(t.amount for t in txns if t.type == 'income')
+        exp = sum(t.amount for t in txns if t.type == 'expense')
+        sav = sum(t.amount for t in txns if t.type == 'saving')
+        return {'label': label, 'income': inc, 'expense': exp, 'saving': sav, 'net': inc - exp}
+
+    daily = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        daily.append(period_row(d.strftime('%b %d'), [t for t in all_txns if t.date == d]))
+
+    weekly_data = []
+    for i in range(3, -1, -1):
+        end = today - timedelta(weeks=i)
+        start = end - timedelta(days=6)
+        weekly_data.append(period_row(
+            f'{start.strftime("%b %d")} – {end.strftime("%b %d")}',
+            [t for t in all_txns if start <= t.date <= end]
+        ))
+
+    monthly_data = []
+    for i in range(11, -1, -1):
+        m = today.month - i
+        y = today.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        monthly_data.append(period_row(
+            date(y, m, 1).strftime('%b %Y'),
+            [t for t in all_txns if t.date.year == y and t.date.month == m]
+        ))
+
+    return render_template('report.html',
+        recurring_summary=recurring_summary,
+        daily=daily, weekly=weekly_data, monthly=monthly_data)
