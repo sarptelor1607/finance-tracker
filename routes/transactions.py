@@ -140,6 +140,7 @@ def report():
     uid = session['user_id']
     today = date.today()
     all_txns = Transaction.query.filter_by(user_id=uid).all()
+    future_one_time = [t for t in all_txns if not t.recurring and t.date > today]
 
     rec_seen = {}
     for t in all_txns:
@@ -148,59 +149,120 @@ def report():
         key = (t.type, t.amount, t.category, t.note or '', t.recurring_interval)
         if key not in rec_seen:
             rec_seen[key] = key
+    recurring = list(rec_seen.values())
 
     recurring_summary = []
-    for typ, amount, category, note, interval in rec_seen.values():
+    for typ, amount, category, note, interval in recurring:
         if interval == 'daily':
-            weekly = amount * 7
-            monthly = amount * 30.44
-            yearly = amount * 365
+            w, m, y = amount * 7, amount * 30.4375, amount * 365
         elif interval == 'weekly':
-            weekly = amount
-            monthly = amount * 52 / 12
-            yearly = amount * 52
+            w, m, y = amount, amount * 52 / 12, amount * 52
         else:
-            weekly = amount * 12 / 52
-            monthly = amount
-            yearly = amount * 12
+            w, m, y = amount * 12 / 52, amount, amount * 12
         recurring_summary.append({
             'type': typ, 'amount': amount, 'category': category,
             'note': note, 'interval': interval,
-            'weekly': weekly, 'monthly': monthly, 'yearly': yearly,
+            'weekly': w, 'monthly': m, 'yearly': y,
         })
 
-    def period_row(label, txns):
+    def project(amount, interval, days):
+        if interval == 'daily':
+            return amount * days
+        if interval == 'weekly':
+            return amount * days / 7
+        if interval == 'monthly':
+            return amount * days / 30.4375
+        return 0
+
+    def build_row(label, period_start, period_end, cumulative):
+        days = (period_end - period_start).days + 1
+        inc = exp = sav = 0
+        for typ, amount, category, note, interval in recurring:
+            p = project(amount, interval, days)
+            if typ == 'income':   inc += p
+            elif typ == 'expense': exp += p
+            elif typ == 'saving':  sav += p
+
+        one_time = [t for t in future_one_time if period_start <= t.date <= period_end]
+        ot_inc = ot_exp = ot_sav = 0
+        for t in one_time:
+            if t.type == 'income':   ot_inc += t.amount
+            elif t.type == 'expense': ot_exp += t.amount
+            elif t.type == 'saving':  ot_sav += t.amount
+        inc += ot_inc
+        exp += ot_exp
+        sav += ot_sav
+
+        net = inc - exp
+        cumulative += net
+        ot_net = ot_inc - ot_exp
+        return {
+            'label': label, 'income': inc, 'expense': exp, 'saving': sav,
+            'net': net, 'cumulative': cumulative,
+            'one_time_count': len(one_time), 'one_time_net': ot_net,
+        }, cumulative
+
+    weekly_data = []
+    cumulative = 0
+    for i in range(4):
+        start = today + timedelta(days=i * 7 + 1)
+        end = today + timedelta(days=(i + 1) * 7)
+        label = f'{start.strftime("%b %d")} – {end.strftime("%b %d")}'
+        row, cumulative = build_row(label, start, end, cumulative)
+        weekly_data.append(row)
+
+    monthly_data = []
+    cumulative = 0
+    for i in range(12):
+        m = today.month + i + 1
+        y = today.year
+        while m > 12:
+            m -= 12
+            y += 1
+        days_in_month = calendar.monthrange(y, m)[1]
+        start = date(y, m, 1)
+        end = date(y, m, days_in_month)
+        row, cumulative = build_row(date(y, m, 1).strftime('%b %Y'), start, end, cumulative)
+        monthly_data.append(row)
+
+    yearly_data = []
+    cumulative = 0
+    for i in range(5):
+        y = today.year + i + 1
+        start = date(y, 1, 1)
+        end = date(y, 12, 31)
+        row, cumulative = build_row(str(y), start, end, cumulative)
+        yearly_data.append(row)
+
+    def past_row(label, period_start, period_end):
+        txns = [t for t in all_txns if period_start <= t.date <= period_end]
         inc = sum(t.amount for t in txns if t.type == 'income')
         exp = sum(t.amount for t in txns if t.type == 'expense')
         sav = sum(t.amount for t in txns if t.type == 'saving')
         return {'label': label, 'income': inc, 'expense': exp, 'saving': sav, 'net': inc - exp}
 
-    daily = []
-    for i in range(6, -1, -1):
-        d = today - timedelta(days=i)
-        daily.append(period_row(d.strftime('%b %d'), [t for t in all_txns if t.date == d]))
-
-    weekly_data = []
+    past_weekly = []
     for i in range(3, -1, -1):
         end = today - timedelta(weeks=i)
         start = end - timedelta(days=6)
-        weekly_data.append(period_row(
-            f'{start.strftime("%b %d")} – {end.strftime("%b %d")}',
-            [t for t in all_txns if start <= t.date <= end]
-        ))
+        past_weekly.append(past_row(f'{start.strftime("%b %d")} – {end.strftime("%b %d")}', start, end))
 
-    monthly_data = []
+    past_monthly = []
     for i in range(11, -1, -1):
         m = today.month - i
         y = today.year
         while m <= 0:
             m += 12
             y -= 1
-        monthly_data.append(period_row(
-            date(y, m, 1).strftime('%b %Y'),
-            [t for t in all_txns if t.date.year == y and t.date.month == m]
-        ))
+        days_in_m = calendar.monthrange(y, m)[1]
+        past_monthly.append(past_row(date(y, m, 1).strftime('%b %Y'), date(y, m, 1), date(y, m, days_in_m)))
+
+    past_yearly = []
+    for i in range(1, -1, -1):
+        y = today.year - i
+        past_yearly.append(past_row(str(y), date(y, 1, 1), date(y, 12, 31)))
 
     return render_template('report.html',
         recurring_summary=recurring_summary,
-        daily=daily, weekly=weekly_data, monthly=monthly_data)
+        weekly=weekly_data, monthly=monthly_data, yearly=yearly_data,
+        past_weekly=past_weekly, past_monthly=past_monthly, past_yearly=past_yearly)

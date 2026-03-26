@@ -18,141 +18,235 @@
     </nav>
 
     <div class="container">
-        <p class="page-title">Financial Report</p>
-
-        <div class="report-section">
-            <h2 class="section-title">Recurring Transactions</h2>
-            {% if recurring_summary %}
-            <div class="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Type</th>
-                            <th>Category</th>
-                            <th>Per Occurrence</th>
-                            <th>Interval</th>
-                            <th>Weekly</th>
-                            <th>Monthly</th>
-                            <th>Yearly</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in recurring_summary %}
-                        <tr>
-                            <td>{{ r.note or '—' }}</td>
-                            <td><span class="badge badge-{{ r.type }}">{{ r.type }}</span></td>
-                            <td><span class="badge badge-category">{{ r.category }}</span></td>
-                            <td class="amount-{{ r.type }}">${{ "%.2f"|format(r.amount) }}</td>
-                            <td><span class="badge badge-interval">{{ r.interval }}</span></td>
-                            <td>${{ "%.2f"|format(r.weekly) }}</td>
-                            <td>${{ "%.2f"|format(r.monthly) }}</td>
-                            <td class="font-semibold">${{ "%.2f"|format(r.yearly) }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="empty-state">No recurring transactions set up yet.</div>
-            {% endif %}
-        </div>
-
-        <div class="report-section">
-            <h2 class="section-title">Daily Overview <span class="section-sub">last 7 days</span></h2>
-            <div class="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Income</th>
-                            <th>Expenses</th>
-                            <th>Savings</th>
-                            <th>Net Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in daily %}
-                        <tr>
-                            <td class="period-label">{{ row.label }}</td>
-                            <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
-                            <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
-                            <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
-                            <td>
-                                <span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">
-                                    {% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="report-header">
+            <p class="page-title" style="margin-bottom:0;">Financial Report</p>
+            <div class="view-toggle">
+                <button class="toggle-btn active" id="btn-past" onclick="switchView('past')">Past</button>
+                <button class="toggle-btn" id="btn-future" onclick="switchView('future')">Future</button>
             </div>
         </div>
 
-        <div class="report-section">
-            <h2 class="section-title">Weekly Overview <span class="section-sub">last 4 weeks</span></h2>
-            <div class="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Week</th>
-                            <th>Income</th>
-                            <th>Expenses</th>
-                            <th>Savings</th>
-                            <th>Net Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in weekly %}
-                        <tr>
-                            <td class="period-label">{{ row.label }}</td>
-                            <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
-                            <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
-                            <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
-                            <td>
-                                <span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">
-                                    {% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div id="view-past">
+
+            <div class="report-section">
+                <h2 class="section-title">Last 4 Weeks <span class="section-sub">week by week</span></h2>
+                <div class="table-box">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Income</th>
+                                <th>Expenses</th>
+                                <th>Savings</th>
+                                <th>Net Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in past_weekly %}
+                            <tr>
+                                <td class="period-label">{{ row.label }}</td>
+                                <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                                <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                                <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                                <td><span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">{% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <div class="report-section">
+                <h2 class="section-title">Last 12 Months <span class="section-sub">month by month</span></h2>
+                <div class="table-box">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Income</th>
+                                <th>Expenses</th>
+                                <th>Savings</th>
+                                <th>Net Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in past_monthly %}
+                            <tr>
+                                <td class="period-label">{{ row.label }}</td>
+                                <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                                <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                                <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                                <td><span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">{% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <h2 class="section-title">Last 2 Years <span class="section-sub">year by year</span></h2>
+                <div class="table-box">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Income</th>
+                                <th>Expenses</th>
+                                <th>Savings</th>
+                                <th>Net Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in past_yearly %}
+                            <tr>
+                                <td class="period-label">{{ row.label }}</td>
+                                <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                                <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                                <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                                <td><span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">{% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
-        <div class="report-section">
-            <h2 class="section-title">Monthly Overview <span class="section-sub">last 12 months</span></h2>
-            <div class="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Income</th>
-                            <th>Expenses</th>
-                            <th>Savings</th>
-                            <th>Net Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in monthly %}
-                        <tr>
-                            <td class="period-label">{{ row.label }}</td>
-                            <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
-                            <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
-                            <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
-                            <td>
-                                <span class="net-badge {% if row.net < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">
-                                    {% if row.net >= 0 %}+{% endif %}${{ "%.2f"|format(row.net) }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div id="view-future" style="display:none;">
+
+            <div class="report-section">
+                <h2 class="section-title">Recurring Transactions <span class="section-sub">projected values per period</span></h2>
+                {% if recurring_summary %}
+                <div class="table-box">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Per Occurrence</th>
+                                <th>Interval</th>
+                                <th>Weekly</th>
+                                <th>Monthly</th>
+                                <th>Yearly</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in recurring_summary %}
+                            <tr>
+                                <td>{{ r.note or '—' }}</td>
+                                <td><span class="badge badge-{{ r.type }}">{{ r.type }}</span></td>
+                                <td><span class="badge badge-category">{{ r.category }}</span></td>
+                                <td class="amount-{{ r.type }}">${{ "%.2f"|format(r.amount) }}</td>
+                                <td><span class="badge badge-interval">{{ r.interval }}</span></td>
+                                <td>${{ "%.2f"|format(r.weekly) }}</td>
+                                <td>${{ "%.2f"|format(r.monthly) }}</td>
+                                <td class="font-semibold">${{ "%.2f"|format(r.yearly) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">No recurring transactions set up yet. Add some on the dashboard to see projections.</div>
+                {% endif %}
             </div>
+
+            <div class="report-section">
+                <h2 class="section-title">Next 4 Weeks <span class="section-sub">week by week</span></h2>
+                <div class="table-box">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Proj. Income</th>
+                                <th>Proj. Expenses</th>
+                                <th>Proj. Savings</th>
+                                <th>One-time</th>
+                                <th>Cumulative Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in weekly %}
+                            <tr>
+                                <td class="period-label">{{ row.label }}</td>
+                                <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                                <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                                <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                                <td class="one-time-cell">{% if row.one_time_count > 0 %}<span class="one-time-tag">{{ row.one_time_count }} item{% if row.one_time_count > 1 %}s{% endif %} ({% if row.one_time_net >= 0 %}+{% endif %}${{ "%.2f"|format(row.one_time_net) }})</span>{% else %}—{% endif %}</td>
+                                <td><span class="net-badge {% if row.cumulative < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">{% if row.cumulative >= 0 %}+{% endif %}${{ "%.2f"|format(row.cumulative) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <h2 class="section-title">Next 12 Months <span class="section-sub">month by month</span></h2>
+                <div class="table-box">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Proj. Income</th>
+                                <th>Proj. Expenses</th>
+                                <th>Proj. Savings</th>
+                                <th>One-time</th>
+                                <th>Cumulative Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in monthly %}
+                            <tr>
+                                <td class="period-label">{{ row.label }}</td>
+                                <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                                <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                                <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                                <td class="one-time-cell">{% if row.one_time_count > 0 %}<span class="one-time-tag">{{ row.one_time_count }} item{% if row.one_time_count > 1 %}s{% endif %} ({% if row.one_time_net >= 0 %}+{% endif %}${{ "%.2f"|format(row.one_time_net) }})</span>{% else %}—{% endif %}</td>
+                                <td><span class="net-badge {% if row.cumulative < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">{% if row.cumulative >= 0 %}+{% endif %}${{ "%.2f"|format(row.cumulative) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <h2 class="section-title">Next 5 Years <span class="section-sub">year by year</span></h2>
+                <div class="table-box">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Proj. Income</th>
+                                <th>Proj. Expenses</th>
+                                <th>Proj. Savings</th>
+                                <th>One-time</th>
+                                <th>Cumulative Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in yearly %}
+                            <tr>
+                                <td class="period-label">{{ row.label }}</td>
+                                <td class="amount-income">{% if row.income > 0 %}+${{ "%.2f"|format(row.income) }}{% else %}—{% endif %}</td>
+                                <td class="amount-expense">{% if row.expense > 0 %}-${{ "%.2f"|format(row.expense) }}{% else %}—{% endif %}</td>
+                                <td class="amount-saving">{% if row.saving > 0 %}${{ "%.2f"|format(row.saving) }}{% else %}—{% endif %}</td>
+                                <td class="one-time-cell">{% if row.one_time_count > 0 %}<span class="one-time-tag">{{ row.one_time_count }} item{% if row.one_time_count > 1 %}s{% endif %} ({% if row.one_time_net >= 0 %}+{% endif %}${{ "%.2f"|format(row.one_time_net) }})</span>{% else %}—{% endif %}</td>
+                                <td><span class="net-badge {% if row.cumulative < 0 %}net-negative{% elif row.saving > 0 and row.saving > row.expense %}net-saving{% else %}net-positive{% endif %}">{% if row.cumulative >= 0 %}+{% endif %}${{ "%.2f"|format(row.cumulative) }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
+
+    <script src="/static/main.js"></script>
 </body>
 </html>

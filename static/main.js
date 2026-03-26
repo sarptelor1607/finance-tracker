@@ -1,3 +1,10 @@
+function switchView(view) {
+    document.getElementById('view-past').style.display = view === 'past' ? 'block' : 'none';
+    document.getElementById('view-future').style.display = view === 'future' ? 'block' : 'none';
+    document.getElementById('btn-past').classList.toggle('active', view === 'past');
+    document.getElementById('btn-future').classList.toggle('active', view === 'future');
+}
+
 function deleteTransaction(id, row) {
     const cells = row.querySelectorAll('td');
     cells.forEach(td => td.style.textDecoration = 'line-through');

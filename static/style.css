@@ -426,6 +426,39 @@ tbody tr:hover {
 
 /* ── Report ── */
 
+.report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.view-toggle {
+    display: flex;
+    background: #e5e7eb;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.toggle-btn {
+    padding: 7px 20px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.toggle-btn.active {
+    background: #fff;
+    color: #1a1a2e;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
 .report-section {
     margin-bottom: 36px;
 }
@@ -458,6 +491,19 @@ tbody tr:hover {
 .badge-interval {
     background: #f3f4f6;
     color: #374151;
+}
+
+.one-time-cell {
+    font-size: 0.82rem;
+    color: #6b7280;
+}
+
+.one-time-tag {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 2px 7px;
+    white-space: nowrap;
 }
 
 .net-badge {
