@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – Finance Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <span class="nav-brand">Finance Tracker</span>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/transactions">History</a>
+            <a href="/auth/logout" class="logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <p class="page-title">Welcome, {{ username }}</p>
+
+        {% if expense > income %}
+        <div class="warning-banner">
+            ⚠ Your expenses exceed your income. Consider reviewing your spending.
+        </div>
+        {% endif %}
+
+        <div class="cards">
+            <div class="card income">
+                <div class="label">Total Income</div>
+                <div class="value">+${{ "%.2f"|format(income) }}</div>
+            </div>
+            <div class="card expense">
+                <div class="label">Total Expenses</div>
+                <div class="value">-${{ "%.2f"|format(expense) }}</div>
+            </div>
+            <div class="card balance {% if balance < 0 %}negative{% endif %}">
+                <div class="label">Balance</div>
+                <div class="value">${{ "%.2f"|format(balance) }}</div>
+            </div>
+        </div>
+
+        <div class="add-form-box">
+            <h2>Add Transaction</h2>
+            <form method="POST" action="/transactions/add">
+                <div class="form-row">
+                    <div>
+                        <label for="type">Type</label>
+                        <select id="type" name="type" required>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="amount">Amount ($)</label>
+                        <input type="number" id="amount" name="amount" min="0.01" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label for="category">Category</label>
+                        <select id="category" name="category" required>
+                            <option value="salary">Salary</option>
+                            <option value="food">Food</option>
+                            <option value="transport">Transport</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="health">Health</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="date">Date</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                </div>
+                <label for="note">Note (optional)</label>
+                <textarea id="note" name="note" placeholder="What was this for?"></textarea>
+                <button type="submit">Add Transaction</button>
+            </form>
+        </div>
+
+        <div class="recent-box">
+            <h2>
+                Recent Transactions
+                <a href="/transactions">View all →</a>
+            </h2>
+            {% if recent %}
+            <div class="table-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in recent %}
+                        <tr>
+                            <td>{{ t.date.strftime('%b %d, %Y') }}</td>
+                            <td><span class="badge badge-{{ t.type }}">{{ t.type }}</span></td>
+                            <td><span class="badge badge-category">{{ t.category }}</span></td>
+                            <td class="amount-{{ t.type }}">
+                                {% if t.type == 'income' %}+{% else %}-{% endif %}${{ "%.2f"|format(t.amount) }}
+                            </td>
+                            <td>{{ t.note or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">No transactions yet. Add one above.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="/static/main.js"></script>
+</body>
+</html>

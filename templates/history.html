@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History – Finance Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <span class="nav-brand">Finance Tracker</span>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/transactions">History</a>
+            <a href="/auth/logout" class="logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <p class="page-title">Transaction History</p>
+
+        <div class="filter-bar">
+            <span>Filter:</span>
+            <a href="/transactions" class="filter-btn {% if not active_filter %}active{% endif %}">All</a>
+            <a href="/transactions?filter=daily" class="filter-btn {% if active_filter == 'daily' %}active{% endif %}">Today</a>
+            <a href="/transactions?filter=weekly" class="filter-btn {% if active_filter == 'weekly' %}active{% endif %}">This Week</a>
+            <a href="/transactions?filter=monthly" class="filter-btn {% if active_filter == 'monthly' %}active{% endif %}">This Month</a>
+        </div>
+
+        {% if transactions %}
+        <div class="cards" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+            <div class="card income">
+                <div class="label">Income</div>
+                <div class="value">+${{ "%.2f"|format(income) }}</div>
+            </div>
+            <div class="card expense">
+                <div class="label">Expenses</div>
+                <div class="value">-${{ "%.2f"|format(expense) }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="table-box">
+            {% if transactions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Note</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr id="row-{{ t.id }}">
+                        <td>{{ t.date.strftime('%b %d, %Y') }}</td>
+                        <td><span class="badge badge-{{ t.type }}">{{ t.type }}</span></td>
+                        <td><span class="badge badge-category">{{ t.category }}</span></td>
+                        <td class="amount-{{ t.type }}">
+                            {% if t.type == 'income' %}+{% else %}-{% endif %}${{ "%.2f"|format(t.amount) }}
+                        </td>
+                        <td>{{ t.note or '—' }}</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteTransaction({{ t.id }}, document.getElementById('row-{{ t.id }}'))">✕</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">No transactions found for this period.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="/static/main.js"></script>
+</body>
+</html>
