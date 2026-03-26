@@ -13,30 +13,71 @@ def login_required(f):
         return f(*args, **kwargs)
     return wrapper
 
+def next_due(last_date, interval):
+    if interval == 'daily':
+        return last_date + timedelta(days=1)
+    if interval == 'weekly':
+        return last_date + timedelta(weeks=1)
+    if interval == 'monthly':
+        if last_date.month == 12:
+            return last_date.replace(year=last_date.year + 1, month=1)
+        return last_date.replace(month=last_date.month + 1)
+    return last_date
+
+def apply_recurring(uid):
+    today = date.today()
+    recurring = Transaction.query.filter_by(user_id=uid, recurring=True).all()
+
+    latest = {}
+    for t in recurring:
+        key = (t.type, t.amount, t.category, t.note, t.recurring_interval)
+        if key not in latest or t.date > latest[key]:
+            latest[key] = t.date
+
+    for key, last_date in latest.items():
+        typ, amount, category, note, interval = key
+        if next_due(last_date, interval) <= today:
+            already = Transaction.query.filter_by(
+                user_id=uid, type=typ, amount=amount,
+                category=category, note=note, date=today, recurring=True
+            ).first()
+            if not already:
+                db.session.add(Transaction(
+                    user_id=uid, type=typ, amount=amount,
+                    category=category, date=today, note=note,
+                    recurring=True, recurring_interval=interval
+                ))
+    db.session.commit()
+
 @transactions_bp.route('/dashboard')
 @login_required
 def dashboard():
     uid = session['user_id']
-    txns = Transaction.query.filter_by(user_id=uid).order_by(Transaction.date.desc()).limit(5).all()
+    apply_recurring(uid)
     all_txns = Transaction.query.filter_by(user_id=uid).all()
     income = sum(t.amount for t in all_txns if t.type == 'income')
     expense = sum(t.amount for t in all_txns if t.type == 'expense')
+    savings = sum(t.amount for t in all_txns if t.type == 'saving')
     balance = income - expense
+    recent = Transaction.query.filter_by(user_id=uid).order_by(Transaction.date.desc()).limit(5).all()
     return render_template('dashboard.html',
-        income=income, expense=expense, balance=balance,
-        recent=txns, username=session.get('username'))
+        income=income, expense=expense, balance=balance, savings=savings,
+        recent=recent, username=session.get('username'))
 
 @transactions_bp.route('/transactions/add', methods=['POST'])
 @login_required
 def add():
     try:
+        recurring = 'recurring' in request.form
         t = Transaction(
             user_id=session['user_id'],
             type=request.form['type'],
             amount=float(request.form['amount']),
             category=request.form['category'],
             date=date.fromisoformat(request.form['date']),
-            note=request.form.get('note', '')
+            note=request.form.get('note', ''),
+            recurring=recurring,
+            recurring_interval=request.form.get('recurring_interval') if recurring else None
         )
         db.session.add(t)
         db.session.commit()
@@ -62,8 +103,9 @@ def list_transactions():
     txns = q.order_by(Transaction.date.desc()).all()
     income = sum(t.amount for t in txns if t.type == 'income')
     expense = sum(t.amount for t in txns if t.type == 'expense')
+    savings = sum(t.amount for t in txns if t.type == 'saving')
     return render_template('history.html', transactions=txns, active_filter=f,
-        income=income, expense=expense)
+        income=income, expense=expense, savings=savings)
 
 @transactions_bp.route('/transactions/<int:tid>', methods=['DELETE'])
 @login_required

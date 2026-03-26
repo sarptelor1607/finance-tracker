@@ -28,7 +28,7 @@
         </div>
 
         {% if transactions %}
-        <div class="cards" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+        <div class="cards" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
             <div class="card income">
                 <div class="label">Income</div>
                 <div class="value">+${{ "%.2f"|format(income) }}</div>
@@ -36,6 +36,10 @@
             <div class="card expense">
                 <div class="label">Expenses</div>
                 <div class="value">-${{ "%.2f"|format(expense) }}</div>
+            </div>
+            <div class="card saving">
+                <div class="label">Savings</div>
+                <div class="value">${{ "%.2f"|format(savings) }}</div>
             </div>
         </div>
         {% endif %}
@@ -60,7 +64,7 @@
                         <td><span class="badge badge-{{ t.type }}">{{ t.type }}</span></td>
                         <td><span class="badge badge-category">{{ t.category }}</span></td>
                         <td class="amount-{{ t.type }}">
-                            {% if t.type == 'income' %}+{% else %}-{% endif %}${{ "%.2f"|format(t.amount) }}
+                            {% if t.type == 'income' %}+{% elif t.type == 'expense' %}-{% endif %}${{ "%.2f"|format(t.amount) }}
                         </td>
                         <td>{{ t.note or '—' }}</td>
                         <td class="action-cell">

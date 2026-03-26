@@ -34,6 +34,10 @@
                 <div class="label">Total Expenses</div>
                 <div class="value">-${{ "%.2f"|format(expense) }}</div>
             </div>
+            <div class="card saving">
+                <div class="label">Total Savings</div>
+                <div class="value">${{ "%.2f"|format(savings) }}</div>
+            </div>
             <div class="card balance {% if balance < 0 %}negative{% endif %}">
                 <div class="label">Balance</div>
                 <div class="value">${{ "%.2f"|format(balance) }}</div>
@@ -49,6 +53,7 @@
                         <select id="type" name="type" required>
                             <option value="income">Income</option>
                             <option value="expense">Expense</option>
+                            <option value="saving">Save for later</option>
                         </select>
                     </div>
                     <div>
@@ -71,6 +76,20 @@
                     <div>
                         <label for="date">Date</label>
                         <input type="date" id="date" name="date" required>
+                    </div>
+                </div>
+                <div class="form-row" style="align-items:center; margin-top:16px;">
+                    <div style="display:flex; align-items:center; gap:10px; padding-top:6px;">
+                        <input type="checkbox" id="recurring" name="recurring" style="width:auto;">
+                        <label for="recurring" style="margin:0; font-size:0.9rem; cursor:pointer;">Recurring</label>
+                    </div>
+                    <div id="interval-wrapper" style="display:none;">
+                        <label for="recurring_interval">Repeat</label>
+                        <select id="recurring_interval" name="recurring_interval">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
                     </div>
                 </div>
                 <label for="note">Note (optional)</label>
@@ -103,7 +122,7 @@
                             <td><span class="badge badge-{{ t.type }}">{{ t.type }}</span></td>
                             <td><span class="badge badge-category">{{ t.category }}</span></td>
                             <td class="amount-{{ t.type }}">
-                                {% if t.type == 'income' %}+{% else %}-{% endif %}${{ "%.2f"|format(t.amount) }}
+                                {% if t.type == 'income' %}+{% elif t.type == 'expense' %}-{% endif %}${{ "%.2f"|format(t.amount) }}
                             </td>
                             <td>{{ t.note or '—' }}</td>
                         </tr>

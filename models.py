@@ -17,3 +17,5 @@ class Transaction(db.Model):
     category = db.Column(db.String(50), nullable=False)
     date = db.Column(db.Date, nullable=False)
     note = db.Column(db.String(200))
+    recurring = db.Column(db.Boolean, default=False)
+    recurring_interval = db.Column(db.String(10), nullable=True)

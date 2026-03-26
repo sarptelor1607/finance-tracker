@@ -35,6 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
         dateInput.value = new Date().toISOString().split('T')[0];
     }
 
+    const recurringCheck = document.getElementById('recurring');
+    if (recurringCheck) {
+        recurringCheck.addEventListener('change', () => {
+            document.getElementById('interval-wrapper').style.display = recurringCheck.checked ? 'block' : 'none';
+        });
+    }
+
     const registerForm = document.getElementById('register-form');
     if (registerForm) {
         registerForm.addEventListener('submit', e => {

@@ -4,6 +4,7 @@ from routes.auth import auth_bp
 from routes.transactions import transactions_bp
 from werkzeug.security import generate_password_hash
 from datetime import date, timedelta
+from sqlalchemy import text
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key'
@@ -38,6 +39,13 @@ def seed():
 
 with app.app_context():
     db.create_all()
+    with db.engine.connect() as conn:
+        for col, definition in [('recurring', 'BOOLEAN DEFAULT 0'), ('recurring_interval', 'VARCHAR(10)')]:
+            try:
+                conn.execute(text(f'ALTER TABLE "transaction" ADD COLUMN {col} {definition}'))
+                conn.commit()
+            except Exception:
+                pass
     seed()
 
 if __name__ == '__main__':

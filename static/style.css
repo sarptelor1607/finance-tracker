@@ -190,7 +190,7 @@ nav {
 
 .cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 28px;
 }
@@ -218,6 +218,7 @@ nav {
 
 .card.income .value  { color: #059669; }
 .card.expense .value { color: #dc2626; }
+.card.saving .value  { color: #2563eb; }
 .card.balance .value { color: #1a1a2e; }
 .card.balance.negative .value { color: #dc2626; }
 
@@ -330,6 +331,11 @@ tbody tr:hover {
     color: #991b1b;
 }
 
+.badge-saving {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
 .badge-category {
     background: #ede9fe;
     color: #5b21b6;
@@ -337,6 +343,7 @@ tbody tr:hover {
 
 .amount-income  { color: #059669; font-weight: 600; }
 .amount-expense { color: #dc2626; font-weight: 600; }
+.amount-saving  { color: #2563eb; font-weight: 600; }
 
 .delete-btn {
     background: none;
@@ -418,6 +425,12 @@ tbody tr:hover {
 }
 
 /* ── Responsive ── */
+
+@media (max-width: 900px) {
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 
 @media (max-width: 640px) {
     .cards {
